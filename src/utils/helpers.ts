@@ -63,7 +63,7 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 export function createLogger(enabled?: boolean) {
-  const prefix = "[expo-ai-kit]";
+  const prefix = "[expo-ai-core]";
 
   return {
     log: (...args: unknown[]) => {
@@ -85,7 +85,7 @@ export function createLogger(enabled?: boolean) {
 }
 
 export function buildDefaultCacheKey(provider: string, model?: string): string {
-  return `expo-ai-kit:${provider}:${model ?? "default"}`;
+  return `expo-ai-core:${provider}:${model ?? "default"}`;
 }
 
 export function toPlainText(value: unknown): string {

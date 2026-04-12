@@ -1,4 +1,4 @@
-# expo-ai-kit ⚡
+# expo-ai-core ⚡
 
 > Add AI (ChatGPT-style chat, streaming, voice) to your Expo app in **5 lines of code**
 
@@ -8,19 +8,19 @@
 
 Building AI features in Expo is painful:
 
-* Too much boilerplate
-* No streaming support
-* Voice is messy
-* UI takes forever
+- Too much boilerplate
+- No streaming support
+- Voice is messy
+- UI takes forever
 
-**expo-ai-kit fixes all of that.**
+**expo-ai-core fixes all of that.**
 
 ---
 
 ## ⚡ Quick Demo
 
 ```tsx
-import { AIChatView, useAIChat } from "expo-ai-kit";
+import { AIChatView, useAIChat } from "expo-ai-core";
 
 export default function Screen() {
   const chat = useAIChat({
@@ -38,24 +38,24 @@ export default function Screen() {
 
 ## ✨ Features
 
-* 🧠 **AI Chat Hook** → `useAIChat`
-* ⚡ **Streaming Responses** (real-time typing effect)
-* 🎤 **Voice Input + TTS**
-* 🔌 **Multi-Provider Support**
+- 🧠 **AI Chat Hook** → `useAIChat`
+- ⚡ **Streaming Responses** (real-time typing effect)
+- 🎤 **Voice Input + TTS**
+- 🔌 **Multi-Provider Support**
+  - OpenAI
+  - Google Gemini
 
-  * OpenAI
-  * Google Gemini
-* 💬 **Prebuilt UI Components**
-* 💾 **Offline Cache + Persistence**
-* ⚙️ **Zero Backend Required**
-* 📦 **Tiny & Tree-shakable**
+- 💬 **Prebuilt UI Components**
+- 💾 **Offline Cache + Persistence**
+- ⚙️ **Zero Backend Required**
+- 📦 **Tiny & Tree-shakable**
 
 ---
 
 ## 📦 Installation
 
 ```bash
-npm install expo-ai-kit
+npm install expo-ai-core
 npm install expo-speech expo-av @react-native-async-storage/async-storage
 ```
 
@@ -88,7 +88,7 @@ useAIChat({
 ## 🎤 Voice (Speech-to-Text + TTS)
 
 ```tsx
-import { useAIVoice } from "expo-ai-kit";
+import { useAIVoice } from "expo-ai-core";
 
 const voice = useAIVoice();
 
@@ -101,33 +101,33 @@ await voice.speak("Hello from Expo");
 
 ## 🧩 Components
 
-* `AIChatView` → full chat UI
-* `AIInput` → input box
-* `AIMessageBubble` → messages
-* `AITypingIndicator` → streaming state
+- `AIChatView` → full chat UI
+- `AIInput` → input box
+- `AIMessageBubble` → messages
+- `AITypingIndicator` → streaming state
 
 All components are:
 
-* Customizable
-* NativeWind-compatible
-* Lightweight
+- Customizable
+- NativeWind-compatible
+- Lightweight
 
 ---
 
 ## 🧠 How it works
 
-* Uses `fetch` (no backend needed)
-* Streams tokens in real-time
-* Stores chats via AsyncStorage
-* Works in Expo Go
+- Uses `fetch` (no backend needed)
+- Streams tokens in real-time
+- Stores chats via AsyncStorage
+- Works in Expo Go
 
 ---
 
 ## ⚠️ Notes
 
-* Native speech recognition requires platform support
-* Works best with Expo SDK 50+
-* No Node.js APIs used
+- Native speech recognition requires platform support
+- Works best with Expo SDK 50+
+- No Node.js APIs used
 
 ---
 
@@ -139,10 +139,10 @@ See `/example` for a full working demo.
 
 ## 💡 Coming Soon
 
-* Image generation support
-* Markdown + code block rendering
-* Better voice transcription
-* More providers
+- Image generation support
+- Markdown + code block rendering
+- Better voice transcription
+- More providers
 
 ---
 
@@ -150,9 +150,9 @@ See `/example` for a full working demo.
 
 If this helped you:
 
-* Star the repo ⭐
-* Share on Twitter/X
-* Build something cool 🚀
+- Star the repo ⭐
+- Share on Twitter/X
+- Build something cool 🚀
 
 ---
 

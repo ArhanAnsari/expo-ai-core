@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "expo-ai-kit-example",
-    "slug": "expo-ai-kit-example",
-    "scheme": "expo-ai-kit-example",
+    "name": "expo-ai-core-example",
+    "slug": "expo-ai-core-example",
+    "scheme": "expo-ai-core-example",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",

@@ -1,20 +1,18 @@
 {
-  "name": "expo-ai-kit",
+  "name": "expo-ai-core",
   "version": "1.0.0",
   "description": "Production-ready AI chat, streaming, voice, and TTS toolkit for Expo apps.",
   "author": "Arhan Ansari (https://github.com/ArhanAnsari)",
   "license": "MIT",
   "type": "module",
-
   "repository": {
     "type": "git",
-    "url": "https://github.com/ArhanAnsari/expo-ai-kit.git"
+    "url": "https://github.com/ArhanAnsari/expo-ai-core.git"
   },
   "bugs": {
-    "url": "https://github.com/ArhanAnsari/expo-ai-kit/issues"
+    "url": "https://github.com/ArhanAnsari/expo-ai-core/issues"
   },
-  "homepage": "https://github.com/ArhanAnsari/expo-ai-kit#readme",
-
+  "homepage": "https://github.com/ArhanAnsari/expo-ai-core#readme",
   "keywords": [
     "expo",
     "react-native",
@@ -25,11 +23,9 @@
     "expo-ai",
     "ai-sdk"
   ],
-
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,14 +33,15 @@
       "require": "./dist/index.cjs"
     }
   },
-
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "sideEffects": false,
-
   "engines": {
     "node": ">=18"
   },
-
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -53,7 +50,6 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.73.0",
@@ -61,13 +57,17 @@
     "expo-av": ">=15.0.0",
     "@react-native-async-storage/async-storage": ">=1.0.0"
   },
-
   "peerDependenciesMeta": {
-    "expo-av": { "optional": true },
-    "expo-speech": { "optional": true },
-    "@react-native-async-storage/async-storage": { "optional": true }
+    "expo-av": {
+      "optional": true
+    },
+    "expo-speech": {
+      "optional": true
+    },
+    "@react-native-async-storage/async-storage": {
+      "optional": true
+    }
   },
-
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
     "@types/react": "^18.3.18",

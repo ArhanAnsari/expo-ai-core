@@ -9,7 +9,7 @@ import type { AIMessage } from "../src/types";
 describe("helpers", () => {
   it("builds cache keys consistently", () => {
     expect(buildDefaultCacheKey("openai", "gpt-4o-mini")).toBe(
-      "expo-ai-kit:openai:gpt-4o-mini",
+      "expo-ai-core:openai:gpt-4o-mini",
     );
   });
 

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AIChatView, useAIChat, useAIVoice } from 'expo-ai-kit';
+import { AIChatView, useAIChat, useAIVoice } from 'expo-ai-core';
 
 type Provider = 'openai' | 'gemini';
 
@@ -27,7 +27,7 @@ export default function App() {
       <View style={styles.container}>
         <View style={styles.topPanel}>
           <View style={styles.hero}>
-            <Text style={styles.kicker}>expo-ai-kit</Text>
+            <Text style={styles.kicker}>expo-ai-core</Text>
             <Text style={styles.title}>AI chat, streaming, and voice for Expo.</Text>
             <Text style={styles.subtitle}>A client-side toolkit for shipping AI experiences in under five minutes.</Text>
           </View>
