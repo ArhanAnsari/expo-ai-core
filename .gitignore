@@ -1,0 +1,11 @@
+dist
+coverage
+node_modules
+.DS_Store
+example/.expo
+example/node_modules
+example/dist
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

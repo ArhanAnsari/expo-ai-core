@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "expo-ai-kit-example",
+    "slug": "expo-ai-kit-example",
+    "scheme": "expo-ai-kit-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#020617"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "backgroundColor": "#020617"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
