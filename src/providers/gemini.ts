@@ -1,9 +1,14 @@
-import type { AIProvider, AIProviderRequest, AIProviderResult } from "../types";
+import type {
+  AIImageGenerationRequest,
+  AIProvider,
+  AIProviderRequest,
+  AIProviderResult,
+} from "../types";
 import {
   appendToken,
   buildTextResult,
   consumeSseLines,
-  createProvider,
+  createProvider as createNativeProvider,
   createRequestController,
   getLogger,
   readGeminiContent,
@@ -23,8 +28,65 @@ export interface GeminiProviderOptions {
   baseUrl?: string;
 }
 
+const MODELS = [
+  "gemini-3.1-pro",
+  "gemini-3.1-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-pro",
+  "nano-banana-2",
+];
+
+export function getModels(): string[] {
+  return MODELS;
+}
+
+async function generateGeminiImage(
+  options: GeminiProviderOptions,
+  prompt: string,
+  signal?: AbortSignal,
+) {
+  const model = options.model ?? "gemini-2.0-flash-preview-image-generation";
+  const url = `${options.baseUrl ?? GEMINI_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(options.apiKey)}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseModalities: ["TEXT", "IMAGE"],
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(
+      errorText ||
+        `Gemini image generation failed with status ${response.status}`,
+    );
+  }
+
+  const payload = await response.json();
+  const parts = payload?.candidates?.[0]?.content?.parts ?? [];
+  const inlineData = parts.find((part: any) => part?.inlineData?.data)
+    ?.inlineData?.data;
+  const textPart = parts.find(
+    (part: any) => typeof part?.text === "string",
+  )?.text;
+
+  return {
+    base64: typeof inlineData === "string" ? inlineData : undefined,
+    revisedPrompt: typeof textPart === "string" ? textPart : undefined,
+    raw: payload,
+  };
+}
+
 function mapGeminiMessages(messages: AIProviderRequest["messages"]) {
-  return messages.map((message) => ({
+  return messages.map((message: AIProviderRequest["messages"][number]) => ({
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.content }],
   }));
@@ -112,17 +174,24 @@ async function requestGemini(
 export function createGeminiProvider(
   options: GeminiProviderOptions,
 ): AIProvider {
-  return createProvider({
+  return createNativeProvider({
     name: "gemini",
-    sendMessage(request) {
+    sendMessage(request: AIProviderRequest) {
       return requestGemini(options, { ...request, stream: false });
     },
-    streamMessage(request) {
+    streamMessage(
+      request: AIProviderRequest & { onToken?: (token: string) => void },
+    ) {
       return requestGemini(
         options,
         { ...request, stream: true },
         { onToken: request.onToken },
       );
     },
+    generateImage(request: AIImageGenerationRequest) {
+      return generateGeminiImage(options, request.prompt, request.signal);
+    },
   });
 }
+
+export const createProvider = createGeminiProvider;

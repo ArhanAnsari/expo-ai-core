@@ -1,8 +1,17 @@
-export type AIProviderName = "openai" | "gemini";
+export type AIProviderName = "openai" | "gemini" | (string & {});
 
-export type AIMessageRole = "user" | "assistant";
+export type AIMessageRole = "system" | "user" | "assistant" | "tool";
 
-export type AIMessageStatus = "sending" | "streaming" | "sent" | "error";
+export type AIMessageStatus =
+  | "sending"
+  | "streaming"
+  | "sent"
+  | "error"
+  | "cancelled";
+
+export type AIChatThemeMode = "light" | "dark" | "system";
+
+export type AITypingSpeed = "slow" | "normal" | "fast";
 
 export interface AIMessage {
   id: string;
@@ -14,8 +23,17 @@ export interface AIMessage {
   metadata?: Record<string, unknown>;
 }
 
+export interface AIConversation {
+  id: string;
+  title: string;
+  messages: AIMessage[];
+  createdAt: number;
+  updatedAt: number;
+  summary?: string;
+}
+
 export interface AIConversationMessage {
-  role: "system" | "user" | "assistant";
+  role: AIMessageRole;
   content: string;
 }
 
@@ -25,9 +43,28 @@ export interface AIProviderRequest {
   timeoutMs?: number;
 }
 
+export interface AIImageGenerationRequest {
+  prompt: string;
+  model?: string;
+  size?: string;
+  signal?: AbortSignal;
+}
+
+export interface AIImageGenerationResult {
+  url?: string;
+  base64?: string;
+  revisedPrompt?: string;
+  raw?: unknown;
+}
+
 export interface AIProviderResult {
   content: string;
   raw?: unknown;
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+  };
 }
 
 export interface AIStreamHandlers {
@@ -42,10 +79,66 @@ export interface AIProvider {
   streamMessage: (
     request: AIProviderRequest & AIStreamHandlers,
   ) => Promise<AIProviderResult>;
+  generateImage?: (
+    request: AIImageGenerationRequest,
+  ) => Promise<AIImageGenerationResult>;
+}
+
+export interface AIToolContext {
+  conversationId: string;
+  messages: AIMessage[];
+  args: Record<string, unknown>;
+}
+
+export type AIToolFunction = (
+  args: Record<string, unknown>,
+  context: AIToolContext,
+) => Promise<unknown> | unknown;
+
+export type AIToolsMap = Record<string, AIToolFunction>;
+
+export interface AIToolCall {
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export interface AIPlugin {
+  name: string;
+  handler?: (input: string, messages: AIMessage[]) => Promise<void> | void;
+  tools?: AIToolsMap;
+}
+
+export interface AIMemoryOptions {
+  enabled?: boolean;
+  strategy?: "window" | "summary";
+  windowSize?: number;
+  maxSummaryLength?: number;
+}
+
+export interface AIDebugMetrics {
+  lastLatencyMs?: number;
+  lastProvider?: string;
+  totalRequests: number;
+  failedRequests: number;
+  totalTokens: number;
+  lastError?: string;
+}
+
+export interface AIDebugEvent {
+  type:
+    | "request:start"
+    | "request:success"
+    | "request:error"
+    | "tool:call"
+    | "tool:result"
+    | "stream:token"
+    | "image:generate";
+  timestamp: number;
+  detail?: Record<string, unknown>;
 }
 
 export interface AIChatOptions {
-  provider: AIProviderName;
+  provider?: AIProviderName;
   apiKey: string;
   model?: string;
   systemPrompt?: string;
@@ -54,6 +147,15 @@ export interface AIChatOptions {
   timeoutMs?: number;
   enableCache?: boolean;
   debug?: boolean;
+  tools?: AIToolsMap;
+  plugins?: AIPlugin[];
+  memory?: AIMemoryOptions;
+  typingSpeed?: AITypingSpeed;
+  themeMode?: AIChatThemeMode;
+  haptics?: boolean;
+  maxToolIterations?: number;
+  onDebugEvent?: (event: AIDebugEvent) => void;
+  routing?: "auto";
 }
 
 export interface AIChatReturn {
@@ -66,6 +168,21 @@ export interface AIChatReturn {
   stopGenerating: () => void;
   clearMessages: () => void;
   retryLastMessage: () => Promise<AIMessage | null>;
+  conversations: AIConversation[];
+  currentConversationId: string;
+  createChat: (title?: string) => string;
+  switchChat: (conversationId: string) => void;
+  deleteChat: (conversationId: string) => void;
+  setConversationTitle: (conversationId: string, title: string) => void;
+  regenerateResponse: () => Promise<AIMessage | null>;
+  copyMessage: (messageId: string) => Promise<boolean>;
+  retryMessage: (messageId: string) => Promise<AIMessage | null>;
+  generateImage: (prompt: string) => Promise<AIImageGenerationResult | null>;
+  setProvider: (provider: AIProviderName) => void;
+  setModel: (model: string) => void;
+  themeMode: AIChatThemeMode;
+  setThemeMode: (mode: AIChatThemeMode) => void;
+  debugState: AIDebugMetrics;
 }
 
 export interface VoiceOptions {
@@ -75,6 +192,9 @@ export interface VoiceOptions {
   autoSpeak?: boolean;
   speechRate?: number;
   speechPitch?: number;
+  loop?: boolean;
+  onTranscript?: (text: string) => void;
+  onVoiceError?: (message: string) => void;
 }
 
 export interface AIVoiceReturn {
@@ -116,6 +236,7 @@ export interface AIMessageBubbleProps {
   >;
   onLinkPress?: (url: string) => void;
   showTimestamp?: boolean;
+  onCopy?: (message: AIMessage) => void;
 }
 
 export interface AIInputProps {
@@ -165,4 +286,30 @@ export interface AIChatViewProps extends AIChatReturn {
   renderFooter?: () => import("react").ReactNode;
   renderHeader?: () => import("react").ReactNode;
   onPressRetry?: () => void;
+  showControls?: boolean;
+}
+
+export interface AIAgentStep {
+  id: string;
+  instruction: string;
+}
+
+export interface AIAgentConfig {
+  goal: string;
+  steps: AIAgentStep[];
+  provider: AIProvider;
+  tools?: AIToolsMap;
+  debug?: boolean;
+}
+
+export interface AIAgentStepResult {
+  step: AIAgentStep;
+  response: string;
+  toolResult?: unknown;
+}
+
+export interface AIAgentResult {
+  goal: string;
+  completed: boolean;
+  steps: AIAgentStepResult[];
 }

@@ -8,7 +8,6 @@ export function useAIVoice(options: VoiceOptions = {}): AIVoiceReturn {
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const recordingRef = useRef<any>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
 
   const clearTranscript = useCallback(() => {
     setTranscript("");
@@ -43,24 +42,22 @@ export function useAIVoice(options: VoiceOptions = {}): AIVoiceReturn {
           globalThis.speechSynthesis.speak(utterance);
         }
       } catch (caughtError) {
-        setError(
+        const message =
           caughtError instanceof Error
             ? caughtError.message
-            : "Failed to speak text",
-        );
+            : "Failed to speak text";
+        setError(message);
+        options.onVoiceError?.(message);
       }
     },
-    [options.speechPitch, options.speechRate],
+    [options.onVoiceError, options.speechPitch, options.speechRate],
   );
 
   const stopListening = useCallback(async () => {
     const recognition = recognitionRef.current;
-
     if (recognition) {
       recognition.stop?.();
       recognitionRef.current = null;
-      cleanupRef.current?.();
-      cleanupRef.current = null;
       setIsListening(false);
       return;
     }
@@ -71,17 +68,18 @@ export function useAIVoice(options: VoiceOptions = {}): AIVoiceReturn {
         await recording.stopAndUnloadAsync();
         setRecordingUri(recording.getURI?.() ?? null);
       } catch (caughtError) {
-        setError(
+        const message =
           caughtError instanceof Error
             ? caughtError.message
-            : "Failed to stop recording",
-        );
+            : "Failed to stop recording";
+        setError(message);
+        options.onVoiceError?.(message);
       } finally {
         recordingRef.current = null;
         setIsListening(false);
       }
     }
-  }, []);
+  }, [options]);
 
   const startListening = useCallback(async () => {
     setError(null);
@@ -107,17 +105,30 @@ export function useAIVoice(options: VoiceOptions = {}): AIVoiceReturn {
           nextTranscript += result[0]?.transcript ?? "";
         }
 
-        setTranscript(nextTranscript.trim());
+        const finalText = nextTranscript.trim();
+        setTranscript(finalText);
+        options.onTranscript?.(finalText);
+
+        if (options.autoSpeak && finalText) {
+          void speak(finalText);
+        }
       };
 
       recognition.onerror = (event: any) => {
-        setError(
-          event?.error ? String(event.error) : "Speech recognition failed",
-        );
+        const message = event?.error
+          ? String(event.error)
+          : "Speech recognition failed";
+        setError(message);
+        options.onVoiceError?.(message);
         setIsListening(false);
       };
 
       recognition.onend = () => {
+        if (options.loop) {
+          recognition.start();
+          return;
+        }
+
         setIsListening(false);
         recognitionRef.current = null;
       };
@@ -155,28 +166,25 @@ export function useAIVoice(options: VoiceOptions = {}): AIVoiceReturn {
       await recording.startAsync();
       recordingRef.current = recording;
       setIsListening(true);
-      setError(
-        "Speech recognition is not available in Expo Go. Audio recording started instead.",
-      );
+
+      const fallbackMessage =
+        "Speech recognition is not available in Expo Go. Audio recording started instead.";
+      setError(fallbackMessage);
+      options.onVoiceError?.(fallbackMessage);
     } catch (caughtError) {
-      setError(
+      const message =
         caughtError instanceof Error
           ? caughtError.message
-          : "Failed to start listening",
-      );
+          : "Failed to start listening";
+      setError(message);
+      options.onVoiceError?.(message);
       setIsListening(false);
     }
-  }, [
-    clearTranscript,
-    options.continuous,
-    options.interimResults,
-    options.language,
-  ]);
+  }, [clearTranscript, options, speak]);
 
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop?.();
-      cleanupRef.current?.();
       const recording = recordingRef.current;
       if (recording) {
         void recording.stopAndUnloadAsync().catch(() => undefined);

@@ -1,8 +1,13 @@
-import type { AIProvider, AIProviderRequest, AIProviderResult } from "../types";
+import type {
+  AIImageGenerationRequest,
+  AIProvider,
+  AIProviderRequest,
+  AIProviderResult,
+} from "../types";
 import {
   buildTextResult,
   consumeSseLines,
-  createProvider,
+  createProvider as createNativeProvider,
   createRequestController,
   getLogger,
   readOpenAIContent,
@@ -11,6 +16,7 @@ import {
 
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+const OPENAI_IMAGE_ENDPOINT = "https://api.openai.com/v1/images/generations";
 
 export interface OpenAIProviderOptions {
   apiKey: string;
@@ -19,6 +25,58 @@ export interface OpenAIProviderOptions {
   timeoutMs?: number;
   debug?: boolean;
   baseUrl?: string;
+}
+
+const MODELS = [
+  "gpt-5.4",
+  "gpt-5.4-pro",
+  "gpt-5.4-mini",
+  "o3-thinking",
+  "gpt-4.1",
+];
+
+export function getModels(): string[] {
+  return MODELS;
+}
+
+async function generateOpenAIImage(
+  options: OpenAIProviderOptions,
+  prompt: string,
+  signal?: AbortSignal,
+) {
+  const response = await fetch(OPENAI_IMAGE_ENDPOINT, {
+    method: "POST",
+    signal,
+    headers: {
+      Authorization: `Bearer ${options.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: options.model?.includes("image") ? options.model : "gpt-image-1",
+      prompt,
+      size: "1024x1024",
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(
+      errorText ||
+        `OpenAI image generation failed with status ${response.status}`,
+    );
+  }
+
+  const payload = await response.json();
+  const item = payload?.data?.[0];
+  return {
+    url: typeof item?.url === "string" ? item.url : undefined,
+    base64: typeof item?.b64_json === "string" ? item.b64_json : undefined,
+    revisedPrompt:
+      typeof item?.revised_prompt === "string"
+        ? item.revised_prompt
+        : undefined,
+    raw: payload,
+  };
 }
 
 async function requestOpenAI(
@@ -99,17 +157,24 @@ async function requestOpenAI(
 export function createOpenAIProvider(
   options: OpenAIProviderOptions,
 ): AIProvider {
-  return createProvider({
+  return createNativeProvider({
     name: "openai",
-    sendMessage(request) {
+    sendMessage(request: AIProviderRequest) {
       return requestOpenAI(options, { ...request, stream: false });
     },
-    streamMessage(request) {
+    streamMessage(
+      request: AIProviderRequest & { onToken?: (token: string) => void },
+    ) {
       return requestOpenAI(
         options,
         { ...request, stream: true },
         { onToken: request.onToken },
       );
     },
+    generateImage(request: AIImageGenerationRequest) {
+      return generateOpenAIImage(options, request.prompt, request.signal);
+    },
   });
 }
+
+export const createProvider = createOpenAIProvider;

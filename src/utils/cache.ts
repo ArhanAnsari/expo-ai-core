@@ -11,6 +11,9 @@ export interface AICacheSnapshot {
   messages: AIMessage[];
   input: string;
   updatedAt: number;
+  conversations?: import("../types").AIConversation[];
+  currentConversationId?: string;
+  themeMode?: import("../types").AIChatThemeMode;
 }
 
 const memoryStore = new Map<string, string>();

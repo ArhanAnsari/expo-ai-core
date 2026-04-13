@@ -40,7 +40,12 @@ export function AIChatView({
   renderMessage,
   renderFooter,
   renderHeader,
-  onPressRetry
+  onPressRetry,
+  regenerateResponse,
+  stopGenerating,
+  copyMessage,
+  retryMessage,
+  showControls = true
 }: AIChatViewProps) {
   const colors = useMemo(() => ({ ...defaultTheme, ...theme }), [theme]);
   const listRef = useRef<FlatList<AIMessage>>(null);
@@ -80,7 +85,7 @@ export function AIChatView({
         contentContainerStyle={[styles.listContent, contentContainerStyle, messages.length === 0 ? styles.emptyList : null]}
         renderItem={({ item, index }: { item: AIMessage; index: number }) => (
           <>
-            {renderMessage ? renderMessage(item, index) : <AIMessageBubble message={item} theme={theme} />}
+            {renderMessage ? renderMessage(item, index) : <AIMessageBubble message={item} theme={theme} onCopy={() => { void copyMessage(item.id); }} />}
           </>
         )}
         ListEmptyComponent={
@@ -107,6 +112,29 @@ export function AIChatView({
         loading={isLoading}
         style={styles.input}
       />
+
+      {showControls ? (
+        <View style={styles.controlsRow}>
+          <Pressable style={[styles.controlButton, { borderColor: colors.borderColor }]} onPress={() => { void regenerateResponse(); }}>
+            <Text style={[styles.controlText, { color: colors.textColor }]}>Regenerate</Text>
+          </Pressable>
+          <Pressable style={[styles.controlButton, { borderColor: colors.borderColor }]} onPress={stopGenerating}>
+            <Text style={[styles.controlText, { color: colors.textColor }]}>Stop</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.controlButton, { borderColor: colors.borderColor }]}
+            onPress={() => {
+              const latest = [...messages].reverse().find((message) => message.status === 'error');
+              if (!latest) {
+                return;
+              }
+              void retryMessage(latest.id);
+            }}
+          >
+            <Text style={[styles.controlText, { color: colors.textColor }]}>Retry Failed</Text>
+          </Pressable>
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -168,5 +196,20 @@ const styles = StyleSheet.create({
   },
   input: {
     marginTop: 12
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10
+  },
+  controlButton: {
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  controlText: {
+    fontSize: 12,
+    fontWeight: '700'
   }
 });

@@ -95,6 +95,54 @@ function renderInlineParts(parts: InlinePart[], onLinkPress?: (url: string) => v
   });
 }
 
+function renderTextLine(
+  line: string,
+  key: string,
+  textStyle: import('react-native').StyleProp<import('react-native').TextStyle>,
+  onLinkPress?: (url: string) => void,
+  selectable = true
+) {
+  const headingMatch = line.match(/^(#{1,3})\s+(.*)$/);
+  if (headingMatch) {
+    const level = headingMatch[1].length;
+    return (
+      <Text
+        key={key}
+        selectable={selectable}
+        style={[textStyle, styles.heading, level === 1 ? styles.h1 : level === 2 ? styles.h2 : styles.h3]}
+      >
+        {renderInlineParts(parseInline(headingMatch[2]), onLinkPress)}
+      </Text>
+    );
+  }
+
+  const unorderedMatch = line.match(/^[-*]\s+(.*)$/);
+  if (unorderedMatch) {
+    return (
+      <Text key={key} selectable={selectable} style={textStyle}>
+        {'\u2022 '}
+        {renderInlineParts(parseInline(unorderedMatch[1]), onLinkPress)}
+      </Text>
+    );
+  }
+
+  const orderedMatch = line.match(/^(\d+)\.\s+(.*)$/);
+  if (orderedMatch) {
+    return (
+      <Text key={key} selectable={selectable} style={textStyle}>
+        {`${orderedMatch[1]}. `}
+        {renderInlineParts(parseInline(orderedMatch[2]), onLinkPress)}
+      </Text>
+    );
+  }
+
+  return (
+    <Text key={key} selectable={selectable} style={textStyle}>
+      {renderInlineParts(parseInline(line), onLinkPress)}
+    </Text>
+  );
+}
+
 function splitMarkdownBlocks(content: string) {
   const blocks: Array<{ type: 'text' | 'code'; value: string; language?: string }> = [];
   const regex = /```([a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g;
@@ -137,18 +185,17 @@ export function MarkdownText({ content, textStyle, codeStyle, onLinkPress, selec
           );
         }
 
-        const paragraphs = block.value.split(/\n{2,}/).filter(Boolean);
+        const lines = block.value.split(/\n/).filter((line) => line.length > 0);
 
-        return paragraphs.map((paragraph: string, paragraphIndex: number) => (
-          <Text
-            key={`text-${blockIndex}-${paragraphIndex}`}
-            selectable={selectable}
-            style={textStyle}
-          >
-            {renderInlineParts(parseInline(paragraph), onLinkPress)}
-            {paragraphIndex < paragraphs.length - 1 ? '\n\n' : ''}
-          </Text>
-        ));
+        return lines.map((line: string, lineIndex: number) =>
+          renderTextLine(
+            line,
+            `text-${blockIndex}-${lineIndex}`,
+            textStyle,
+            onLinkPress,
+            selectable
+          )
+        );
       })}
     </View>
   );
@@ -180,6 +227,23 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: '700'
+  },
+  heading: {
+    marginTop: 6,
+    marginBottom: 4,
+    fontWeight: '700'
+  },
+  h1: {
+    fontSize: 22,
+    lineHeight: 28
+  },
+  h2: {
+    fontSize: 19,
+    lineHeight: 24
+  },
+  h3: {
+    fontSize: 17,
+    lineHeight: 22
   },
   link: {
     color: '#2563eb',

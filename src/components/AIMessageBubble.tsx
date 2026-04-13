@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AIMessage, AITheme } from '../types';
 import { MarkdownText } from './MarkdownText';
 
@@ -27,6 +27,7 @@ export interface AIMessageBubbleProps {
   codeStyle?: import('react-native').StyleProp<import('react-native').TextStyle>;
   onLinkPress?: (url: string) => void;
   showTimestamp?: boolean;
+  onCopy?: (message: AIMessage) => void;
 }
 
 export function AIMessageBubble({
@@ -37,7 +38,8 @@ export function AIMessageBubble({
   contentStyle,
   codeStyle,
   onLinkPress,
-  showTimestamp
+  showTimestamp,
+  onCopy
 }: AIMessageBubbleProps) {
   const colors = { ...defaultTheme, ...theme };
   const isUser = message.role === 'user';
@@ -68,6 +70,15 @@ export function AIMessageBubble({
           <Text style={[styles.status, { color: colors.errorColor }]}>{message.error}</Text>
         ) : null}
         {showTimestamp ? <Text style={[styles.timestamp, { color: colors.textMutedColor }]}>{new Date(message.createdAt).toLocaleTimeString()}</Text> : null}
+        {onCopy ? (
+          <Pressable
+            onPress={() => onCopy(message)}
+            style={styles.copyButton}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.copyText, { color: colors.textMutedColor }]}>Copy</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -106,5 +117,15 @@ const styles = StyleSheet.create({
     marginTop: 6,
     opacity: 0.65,
     textAlign: 'right'
+  },
+  copyButton: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4
+  },
+  copyText: {
+    fontSize: 11,
+    fontWeight: '600'
   }
 });
